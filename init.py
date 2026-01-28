@@ -126,7 +126,8 @@ def greedy_fill(x, p, R, b):
 
 def generate_initial_population(p, R, b, pop_size=30):
     """
-    Gera uma população inicial de soluções viáveis para o algoritmo genético.
+    Gera uma população inicial de soluções para o algoritmo genético.
+    As soluções podem ser inviáveis (serão penalizadas na função fitness).
     
     Args:
         p: vetor de lucros
@@ -135,7 +136,7 @@ def generate_initial_population(p, R, b, pop_size=30):
         pop_size: tamanho da população
     
     Retorna:
-        population: lista de soluções binárias viáveis
+        population: lista de soluções binárias (possivelmente inviáveis)
     """
     m = R.shape[0]
     population = []
@@ -144,8 +145,7 @@ def generate_initial_population(p, R, b, pop_size=30):
         lambdas = (1 / b) * np.random.uniform(0.8, 1.2, size=m)
 
         x = dantzig_surrogate(p, R, b, lambdas)
-        x = repair_solution(x, R, b)
-        x = greedy_fill(x, p, R, b)
+        # Soluções não são reparadas - podem ser inviáveis
 
         population.append(x)
 

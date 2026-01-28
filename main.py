@@ -38,13 +38,6 @@ def main():
     print(f"\nGerando população inicial...")
     population = generate_initial_population(p, R, b, pop_size=POPULATION_SIZE)
 
-    # Validação da população
-    test_population(population, R, b)
-
-    # Exibe fitness da população inicial
-    initial_fitness = [evaluate_solution(x, p) for x in population]
-    print(f"Fitness inicial - Melhor: {max(initial_fitness)}, Média: {np.mean(initial_fitness):.2f}")
-
     # Executa o algoritmo genético
     print(f"\nExecutando algoritmo genético por {GENERATIONS} gerações...")
     best_solution, best_fitness, history = genetic_algorithm(
@@ -53,11 +46,11 @@ def main():
         elitism=True
     )
 
-    # Valida a solução final
-    assert check_feasibility(best_solution, R, b), "Solução final inviável!"
+    # Verifica viabilidade da solução final
+    is_feasible = check_feasibility(best_solution, R, b)
 
     # Exibe resultados
-    print_ga_results(best_solution, best_fitness, history, optimum, GENERATIONS)
+    print_ga_results(best_solution, best_fitness, history, optimum, GENERATIONS, is_feasible)
 
 
 if __name__ == "__main__":

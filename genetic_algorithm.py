@@ -1,36 +1,41 @@
 import numpy as np
 from init import (
-    repair_solution,
-    greedy_fill,
     check_feasibility
 )
+from penalty import (
+    get_penalty,
+    DEFAULT_PENALTY
+)
 
-# =========================
-# Constantes do AG
-# =========================
 
 MUTATION_RATE = 0.05  # Taxa de mutação (5%)
 M_CROSSOVER_POINTS = 3  # Número de pontos de crossover
 
 
-# =========================
-# Função de Fitness
-# =========================
-
-def fitness(x, p):
+def fitness(x, p, R=None, b=None, penalty_type=DEFAULT_PENALTY):
     """
     Calcula o fitness de um indivíduo.
     Soma os lucros dos itens selecionados (genes = 1).
+    Aplica penalidade se a solução for inviável.
     
     Args:
         x: solução binária (cromossomo)
         p: vetor de lucros
+        R: matriz de restrições (opcional, para penalidade)
+        b: vetor de capacidades (opcional, para penalidade)
+        penalty_type: tipo de penalidade (1, 2, 3 ou 4)
     
     Retorna:
-        valor total do lucro
+        valor do fitness (lucro - penalidade)
     """
-    return np.dot(p, x)
-
+    profit = np.dot(p, x)
+    
+    # Se R e b forem fornecidos, calcula penalidade
+    if R is not None and b is not None:
+        penalty = get_penalty(x, p, R, b, penalty_type)
+        return profit - penalty
+    
+    return profit
 
 
 def stochastic_universal_sampling(population, fitness_values, num_parents):
@@ -116,7 +121,8 @@ def m_point_crossover(parent1, parent2, m=M_CROSSOVER_POINTS):
 
 def crossover_and_select_best(parent1, parent2, p, R, b, m=M_CROSSOVER_POINTS):
     """
-    Realiza crossover, repara os filhos e retorna o melhor.
+    Realiza crossover e retorna o filho com melhor fitness.
+    Os filhos podem ser inviáveis (serão penalizados na função fitness).
     
     Args:
         parent1, parent2: pais
@@ -126,19 +132,15 @@ def crossover_and_select_best(parent1, parent2, p, R, b, m=M_CROSSOVER_POINTS):
         m: número de pontos de crossover
     
     Retorna:
-        melhor filho (viável)
+        melhor filho (possivelmente inviável)
     """
     child1, child2 = m_point_crossover(parent1, parent2, m)
     
-    # Repara e preenche os filhos para garantir viabilidade
-    child1 = repair_solution(child1, R, b)
-    child1 = greedy_fill(child1, p, R, b)
-    
-    child2 = repair_solution(child2, R, b)
-    child2 = greedy_fill(child2, p, R, b)
+    # Soluções não são reparadas - podem ser inviáveis
+    # A penalidade será aplicada na função fitness
     
     # Retorna o filho com melhor fitness
-    if fitness(child1, p) >= fitness(child2, p):
+    if fitness(child1, p, R, b) >= fitness(child2, p, R, b):
         return child1
     else:
         return child2
@@ -197,8 +199,8 @@ def genetic_algorithm(population, p, R, b, generations=100, elitism=True):
     best_ever_fitness = -1
     
     for gen in range(generations):
-        # Calcula fitness de todos os indivíduos
-        fitness_values = np.array([fitness(ind, p) for ind in current_pop])
+        # Calcula fitness de todos os indivíduos (com penalidade)
+        fitness_values = np.array([fitness(ind, p, R, b) for ind in current_pop])
         
         # Atualiza melhor solução global
         gen_best_idx = np.argmax(fitness_values)
@@ -228,15 +230,13 @@ def genetic_algorithm(population, p, R, b, generations=100, elitism=True):
             # Mutação
             child = mutate(child)
             
-            # Repara após mutação para garantir viabilidade
-            child = repair_solution(child, R, b)
-            child = greedy_fill(child, p, R, b)
+            # Soluções não são reparadas - podem ser inviáveis
             
             new_population.append(child)
         
         # Se população tem tamanho ímpar, adiciona mais um indivíduo
         while len(new_population) < pop_size:
-            if elitism:
+            if elitism and best_ever is not None:
                 new_population.append(best_ever.copy())
             else:
                 idx = np.random.randint(len(parents))
@@ -244,7 +244,7 @@ def genetic_algorithm(population, p, R, b, generations=100, elitism=True):
         
         # Elitismo: substitui o pior pelo melhor de todos os tempos
         if elitism and best_ever is not None:
-            new_fitness = [fitness(ind, p) for ind in new_population]
+            new_fitness = [fitness(ind, p, R, b) for ind in new_population]
             worst_idx = np.argmin(new_fitness)
             new_population[worst_idx] = best_ever.copy()
         
@@ -253,7 +253,7 @@ def genetic_algorithm(population, p, R, b, generations=100, elitism=True):
     return best_ever, best_ever_fitness, history
 
 
-def print_ga_results(best_solution, best_fitness, history, optimum, generations):
+def print_ga_results(best_solution, best_fitness, history, optimum, generations, is_feasible=True):
     """
     Exibe os resultados do algoritmo genético.
     """
@@ -264,6 +264,7 @@ def print_ga_results(best_solution, best_fitness, history, optimum, generations)
     print(f"Ótimo conhecido: {optimum}")
     print(f"Gap para o ótimo: {((optimum - best_fitness) / optimum) * 100:.2f}%")
     print(f"Itens selecionados: {np.sum(best_solution)}")
+    print(f"Solução viável: {'✔️ Sim' if is_feasible else '❌ Não'}")
     print(f"\nEvolução do fitness:")
     print(f"  Geração 1   - Melhor: {history['best'][0]:.0f}, Média: {history['average'][0]:.2f}")
     print(f"  Geração {generations} - Melhor: {history['best'][-1]:.0f}, Média: {history['average'][-1]:.2f}")
