@@ -36,7 +36,7 @@ def main():
 
     # Geração da população inicial
     print(f"\nGerando população inicial...")
-    population = generate_initial_population(p, R, b, pop_size=POPULATION_SIZE)
+    population = generate_initial_population(p, R, b, pop_size=5*n)
 
     # Executa o algoritmo genético
     print(f"\nExecutando algoritmo genético por {GENERATIONS} gerações...")
@@ -50,7 +50,8 @@ def main():
     is_feasible = check_feasibility(best_solution, R, b)
 
     # Exibe resultados
-    print_ga_results(best_solution, best_fitness, history, optimum, GENERATIONS, is_feasible)
+    print_ga_results(best_solution, best_fitness, history, optimum, GENERATIONS, is_feasible, p=p)
+
 
 
 if __name__ == "__main__":

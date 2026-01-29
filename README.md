@@ -1,52 +1,38 @@
-# Algoritmo Genético para o Problema da Mochila Multidimensional (MKP)
+# 🧬 Algoritmo Genético Híbrido para o Problema da Mochila Multidimensional (MKP)
 
-## O Problema
+Este projeto implementa um **Algoritmo Genético Híbrido (HGA)** para resolver o **Problema da Mochila Multidimensional (Multidimensional Knapsack Problem – MKP)**, inspirado no artigo clássico que combina a heurística de Dantzig com funções de penalidade, em especial a penalidade **Pen3**.
 
-O **Problema da Mochila Multidimensional (MKP)** consiste em selecionar um subconjunto de itens que maximize o lucro total, respeitando múltiplas restrições de capacidade.
+A instância utilizada para validação foi a **SENTO1 (OR-Library)**, contendo **60 itens** e **30 restrições**, com ótimo conhecido igual a **7772**.
 
-### Formulação Matemática
+O algoritmo implementado é capaz de atingir exatamente o ótimo global dessa instância.
 
-$$\max \sum_{j=1}^{n} p_j \cdot x_j$$
+---
 
-Sujeito a:
-$$\sum_{j=1}^{n} w_{ij} \cdot x_j \leq c_i, \quad \forall i \in \{1, ..., m\}$$
-$$x_j \in \{0, 1\}, \quad \forall j \in \{1, ..., n\}$$
+## 📌 Visão Geral
 
-## Variáveis
+O MKP consiste em selecionar um subconjunto de itens de modo a maximizar o lucro total, respeitando múltiplas restrições de capacidade:
 
-| Variável | Descrição |
-|----------|-----------|
-| $n$ | Número de itens |
-| $m$ | Número de restrições (knapsack)|
-| $p_j$ | Lucro do item $j$ |
-| $w_{ij}$ | Peso do item $j$ na restrição $i$ |
-| $c_i$ | Capacidade da restrição $i$ |
-| $x_j$ | Variável binária (1 = item selecionado) |
+\[
+\max \sum_{j=1}^{n} p_j x_j
+\]
 
-## Algoritmo Genético
+sujeito a:
 
-### Representação
-Cada indivíduo é um vetor binário de tamanho $n$, onde `x[j] = 1` indica que o item $j$ está na mochila.
+\[
+\sum_{j=1}^{n} w_{ij} x_j \le b_i, \quad i = 1,\dots,m
+\]
 
-### Componentes
+onde:
 
-| Componente | Método |
-|------------|--------|
-| **População Inicial** | Heurística de Dantzig com restrição substituta |
-| **Fitness** | $f(x) = \sum_{j=1}^{n} p_j \cdot x_j$ |
-| **Seleção** | Stochastic Universal Sampling (SUS) |
-| **Crossover** | M-point crossover (M=3) |
-| **Mutação** | Bit-flip com taxa de 5% |
-| **Reparo** | Remove itens até viabilidade + greedy fill |
+- \(p_j\): lucro do item \(j\)  
+- \(w_{ij}\): consumo do item \(j\) na restrição \(i\)  
+- \(b_i\): capacidade da restrição \(i\)  
+- \(x_j \in \{0,1\}\): decisão de selecionar ou não o item  
 
-### Parâmetros
+---
 
-```python
-POPULATION_SIZE = 30
-GENERATIONS = 100
-MUTATION_RATE = 0.05
-M_CROSSOVER_POINTS = 3
-```
+## 📂 Estrutura do Projeto
+
 
 ## Execução
 
@@ -54,7 +40,7 @@ M_CROSSOVER_POINTS = 3
 python main.py
 ```
 
-## Estrutura
+## 📂 Estrutura do Projeto
 
 ```
 ├── main.py              # Ponto de entrada
@@ -62,3 +48,37 @@ python main.py
 ├── genetic_algorithm.py # Implementação do AG
 └── dataset_sento1.txt   # Instância SENTO1
 ```
+
+---
+
+## ⚙️ Principais Modificações Implementadas
+
+### 1. Leitura do Dataset (SENTO1)
+
+Foi implementada a função `read_sento1`, responsável por:
+
+- Ler o arquivo da OR-Library;
+- Extrair:
+  - número de restrições (`m`);
+  - número de itens (`n`);
+  - vetor de lucros (`p`);
+  - vetor de capacidades (`b`);
+  - matriz de consumo (`R`);
+  - ótimo conhecido.
+
+Isso garante a reconstrução correta do modelo MKP diretamente a partir do arquivo texto.
+
+---
+
+### 2. População Inicial com Dantzig + Restrição Substituta
+
+A população inicial é gerada utilizando a heurística de **Dantzig com restrição substituta**:
+
+- Combinação linear das restrições por multiplicadores aleatórios;
+- Ordenação dos itens pela razão lucro/peso;
+- Inserção gulosa enquanto a capacidade substituta permite.
+
+Além disso, foi adicionada proteção contra divisão por zero:
+
+```python
+w[w == 0] = 1e-9

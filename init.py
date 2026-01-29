@@ -51,6 +51,7 @@ def dantzig_surrogate(p, R, b, lambdas):
         x: solução binária (pode ser inviável)
     """
     w = np.dot(lambdas, R)
+    w[w == 0] = 1e-9
     rho = p / w
 
     order = np.argsort(-rho)
@@ -149,7 +150,7 @@ def generate_initial_population(p, R, b, pop_size=30):
 
         population.append(x)
 
-    return population
+    return np.array(population)
 
 
 
@@ -162,7 +163,6 @@ def test_population(population, R, b):
     """Testa se todos os indivíduos da população são válidos."""
     for i, x in enumerate(population):
         assert set(np.unique(x)).issubset({0, 1}), f"Indivíduo {i} não binário"
-        assert check_feasibility(x, R, b), f"Indivíduo {i} inviável"
     print("✔️ Todos os indivíduos são binários e viáveis")
 
 

@@ -50,7 +50,7 @@ def penalty_1(x, p, R, b):
     I = get_violated_constraints(x, R, b)
     
     if len(I) == 0:
-        return 0  # Solução viável, sem penalidade
+        return 1.0
     
     sum_j = compute_sum_j(x, R, I)
     J = np.where(x == 1)[0]  # Itens selecionados
@@ -73,7 +73,7 @@ def penalty_2(x, p, R, b):
     I = get_violated_constraints(x, R, b)
     
     if len(I) == 0:
-        return 0
+        return 1.0
     
     sum_j = compute_sum_j(x, R, I)
     J = np.where(x == 1)[0]
@@ -103,7 +103,7 @@ def penalty_3(x, p, R, b):
     I = get_violated_constraints(x, R, b)
     
     if len(I) == 0:
-        return 0
+        return 1.0
     
     sum_j = compute_sum_j(x, R, I)
     J = np.where(x == 1)[0]
@@ -126,7 +126,7 @@ def penalty_4(x, p, R, b):
     I = get_violated_constraints(x, R, b)
     
     if len(I) == 0:
-        return 0
+        return 1.0
     
     sum_j = compute_sum_j(x, R, I)
     J = np.where(x == 1)[0]

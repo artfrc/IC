@@ -14,28 +14,18 @@ M_CROSSOVER_POINTS = 3  # Número de pontos de crossover
 
 def fitness(x, p, R=None, b=None, penalty_type=DEFAULT_PENALTY):
     """
-    Calcula o fitness de um indivíduo.
-    Soma os lucros dos itens selecionados (genes = 1).
-    Aplica penalidade se a solução for inviável.
-    
-    Args:
-        x: solução binária (cromossomo)
-        p: vetor de lucros
-        R: matriz de restrições (opcional, para penalidade)
-        b: vetor de capacidades (opcional, para penalidade)
-        penalty_type: tipo de penalidade (1, 2, 3 ou 4)
-    
-    Retorna:
-        valor do fitness (lucro - penalidade)
+    Fitness conforme o artigo:
+        fitness = lucro * Pen(S)
+    - Se viável: Pen = 1
+    - Se inviável: Pen = Pen3 (ou outra), tipicamente um número pequeno
     """
-    profit = np.dot(p, x)
-    
-    # Se R e b forem fornecidos, calcula penalidade
-    if R is not None and b is not None:
-        penalty = get_penalty(x, p, R, b, penalty_type)
-        return profit - penalty
-    
-    return profit
+    profit = float(np.dot(p, x))
+
+    if R is None or b is None:
+        return profit
+
+    pen = float(get_penalty(x, p, R, b, penalty_type))
+    return profit * pen
 
 
 def stochastic_universal_sampling(population, fitness_values, num_parents):
@@ -253,18 +243,23 @@ def genetic_algorithm(population, p, R, b, generations=100, elitism=True):
     return best_ever, best_ever_fitness, history
 
 
-def print_ga_results(best_solution, best_fitness, history, optimum, generations, is_feasible=True):
-    """
-    Exibe os resultados do algoritmo genético.
-    """
+def print_ga_results(best_solution, best_fitness, history, optimum, generations, is_feasible=True, p=None):
+    profit = np.dot(p, best_solution) if p is not None else None
+
     print(f"\n{'='*50}")
     print("RESULTADOS DO ALGORITMO GENÉTICO")
     print(f"{'='*50}")
     print(f"Melhor fitness encontrado: {best_fitness}")
-    print(f"Ótimo conhecido: {optimum}")
-    print(f"Gap para o ótimo: {((optimum - best_fitness) / optimum) * 100:.2f}%")
+
+    if profit is not None:
+        print(f"Lucro da melhor solução: {profit}")
+        print(f"Ótimo conhecido: {optimum}")
+        print(f"Gap para o ótimo: {((optimum - profit) / optimum) * 100:.2f}%")
+
     print(f"Itens selecionados: {np.sum(best_solution)}")
     print(f"Solução viável: {'✔️ Sim' if is_feasible else '❌ Não'}")
+
     print(f"\nEvolução do fitness:")
-    print(f"  Geração 1   - Melhor: {history['best'][0]:.0f}, Média: {history['average'][0]:.2f}")
-    print(f"  Geração {generations} - Melhor: {history['best'][-1]:.0f}, Média: {history['average'][-1]:.2f}")
+    print(f"  Geração 1   - Melhor: {history['best'][0]:.6f}, Média: {history['average'][0]:.6f}")
+    print(f"  Geração {generations} - Melhor: {history['best'][-1]:.6f}, Média: {history['average'][-1]:.6f}")
+
