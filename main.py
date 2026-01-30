@@ -9,18 +9,18 @@ from init import (
 from genetic_algorithm import (
     genetic_algorithm,
     print_ga_results,
-    MUTATION_RATE,
-    M_CROSSOVER_POINTS
+    M_CROSSOVER_POINTS,
+    print_history
 )
 
 
-POPULATION_SIZE = 30
-GENERATIONS = 1000
-
 
 def main():
-    # Leitura do dataset
     p, R, b, m, n, optimum = read_sento1("dataset_sento1.txt")
+
+    GENERATIONS = 3000
+    POP_SIZE = 5*n
+    CROSSOVER_RATE = 0.95  # Taxa de crossover (95%)
 
     print(f"{'='*50}")
     print("PROBLEMA DA MOCHILA MULTIDIMENSIONAL")
@@ -29,21 +29,21 @@ def main():
     print(f"Itens: {n}, Restrições: {m}")
     print(f"Ótimo conhecido: {optimum}")
     print(f"\nParâmetros do AG:")
-    print(f"  População: {POPULATION_SIZE}")
+    print(f"  População: {POP_SIZE}")
     print(f"  Gerações: {GENERATIONS}")
-    print(f"  Taxa de mutação: {MUTATION_RATE*100:.1f}%")
     print(f"  Pontos de crossover: {M_CROSSOVER_POINTS}")
 
     # Geração da população inicial
     print(f"\nGerando população inicial...")
-    population = generate_initial_population(p, R, b, pop_size=5*n)
+    population = generate_initial_population(p, R, b, pop_size=POP_SIZE)
 
     # Executa o algoritmo genético
     print(f"\nExecutando algoritmo genético por {GENERATIONS} gerações...")
     best_solution, best_fitness, history = genetic_algorithm(
-        population, p, R, b, 
-        generations=GENERATIONS, 
-        elitism=True
+        population, p, R, b,
+        generations=GENERATIONS,
+        elitism=True,
+        crossover_rate=CROSSOVER_RATE
     )
 
     # Verifica viabilidade da solução final
@@ -51,6 +51,7 @@ def main():
 
     # Exibe resultados
     print_ga_results(best_solution, best_fitness, history, optimum, GENERATIONS, is_feasible, p=p)
+    #print_history(history)
 
 
 

@@ -1,14 +1,10 @@
 import numpy as np
-from init import (
-    check_feasibility
-)
 from penalty import (
     get_penalty,
     DEFAULT_PENALTY
 )
 
 
-MUTATION_RATE = 0.05  # Taxa de mutação (5%)
 M_CROSSOVER_POINTS = 3  # Número de pontos de crossover
 
 
@@ -137,7 +133,7 @@ def crossover_and_select_best(parent1, parent2, p, R, b, m=M_CROSSOVER_POINTS):
 
 
 
-def mutate(x, mutation_rate=MUTATION_RATE):
+def mutate(x, mutation_rate):
     """
     Aplica mutação bit-flip com probabilidade mutation_rate.
     
@@ -158,7 +154,7 @@ def mutate(x, mutation_rate=MUTATION_RATE):
 
 
 
-def genetic_algorithm(population, p, R, b, generations=100, elitism=True):
+def genetic_algorithm(population, p, R, b, generations=100, elitism=True, crossover_rate=0.95):
     """
     Executa o algoritmo genético.
     
@@ -189,6 +185,10 @@ def genetic_algorithm(population, p, R, b, generations=100, elitism=True):
     best_ever_fitness = -1
     
     for gen in range(generations):
+        # Calcula mutation rate variável conforme fórmula fornecida
+        # Iter começa em 1, então usamos gen+1
+        iter_num = gen + 1
+        mutation_rate = (0.6 * (iter_num ** 10)) * (0.1 / (pop_size ** 10)) + 0.01
         # Calcula fitness de todos os indivíduos (com penalidade)
         fitness_values = np.array([fitness(ind, p, R, b) for ind in current_pop])
         
@@ -213,15 +213,15 @@ def genetic_algorithm(population, p, R, b, generations=100, elitism=True):
         for i in range(0, len(parents) - 1, 2):
             parent1 = parents[i]
             parent2 = parents[i + 1]
-            
-            # Crossover e seleção do melhor filho
-            child = crossover_and_select_best(parent1, parent2, p, R, b)
-            
-            # Mutação
-            child = mutate(child)
-            
+            # Aplica crossover com probabilidade crossover_rate
+            if np.random.random() < crossover_rate:
+                child = crossover_and_select_best(parent1, parent2, p, R, b)
+            else:
+                # Sem crossover: copia um dos pais aleatoriamente
+                child = parent1.copy() if np.random.random() < 0.5 else parent2.copy()
+            # Mutação com taxa variável
+            child = mutate(child, mutation_rate=mutation_rate)
             # Soluções não são reparadas - podem ser inviáveis
-            
             new_population.append(child)
         
         # Se população tem tamanho ímpar, adiciona mais um indivíduo
@@ -263,3 +263,7 @@ def print_ga_results(best_solution, best_fitness, history, optimum, generations,
     print(f"  Geração 1   - Melhor: {history['best'][0]:.6f}, Média: {history['average'][0]:.6f}")
     print(f"  Geração {generations} - Melhor: {history['best'][-1]:.6f}, Média: {history['average'][-1]:.6f}")
 
+
+def print_history(history):
+    for gen in range(len(history['best'])):
+        print(f"Geração {gen+1}: Melhor: {history['best'][gen]:.6f}, Média: {history['average'][gen]:.6f}, Pior: {history['worst'][gen]:.6f}")
