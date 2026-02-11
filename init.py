@@ -1,6 +1,6 @@
 import numpy as np
 
-def read_sento1(filename):
+def read_file(filename):
     """
     Lê um arquivo no formato SENTO1 para o problema da mochila multidimensional.
     
